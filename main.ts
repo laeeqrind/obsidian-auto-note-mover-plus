@@ -10,7 +10,7 @@ export default class AutoNoteMover extends Plugin {
 		const folderTagPattern = this.settings.folder_tag_pattern;
 		const excludedFolder = this.settings.excluded_folder;
 
-		const fileCheck = (file: TAbstractFile, oldPath?: string, caller?: string) => {
+		const fileCheck = async (file: TAbstractFile, oldPath?: string, caller?: string) => {
 			if (this.settings.trigger_auto_manual !== 'Automatic' && caller !== 'cmd') {
 				return;
 			}
@@ -76,6 +76,13 @@ export default class AutoNoteMover extends Plugin {
 						fileMove(this.app, settingFolder, fileFullName, file);
 						break;
 					}
+				}
+			}
+
+			if (this.settings.templater_enabled) {
+				const templaterPlugin = this.app.plugins.plugins['templater-obsidian'];
+				if (templaterPlugin) {
+					await this.processTemplaterRules(file, templaterPlugin);
 				}
 			}
 		};
@@ -149,5 +156,23 @@ export default class AutoNoteMover extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	async processTemplaterRules(file: TFile, templaterPlugin: any) {
+		for (const pattern of this.settings.templater_patterns) {
+			const templateFile = this.app.vault.getAbstractFileByPath(pattern.template);
+			if (templateFile instanceof TFile) {
+				const content = await templaterPlugin.templater.parse_template({
+					target_file: file,
+					template_file: templateFile
+				});
+				
+				// Check conditions and move file
+				if (this.matchesTemplaterConditions(content, pattern.conditions)) {
+					await fileMove(this.app, pattern.folder, file.name, file);
+					break;
+				}
+			}
+		}
 	}
 }

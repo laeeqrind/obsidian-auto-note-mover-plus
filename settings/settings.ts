@@ -22,6 +22,12 @@ export interface AutoNoteMoverSettings {
 	folder_tag_pattern: Array<FolderTagPattern>;
 	use_regex_to_check_for_excluded_folder: boolean;
 	excluded_folder: Array<ExcludedFolder>;
+	templater_enabled: boolean;
+	templater_patterns: Array<{
+		template: string;
+		folder: string;
+		conditions?: string[];
+	}>;
 }
 
 export const DEFAULT_SETTINGS: AutoNoteMoverSettings = {
@@ -31,6 +37,8 @@ export const DEFAULT_SETTINGS: AutoNoteMoverSettings = {
 	folder_tag_pattern: [{ folder: '', tag: '', pattern: '' }],
 	use_regex_to_check_for_excluded_folder: false,
 	excluded_folder: [{ folder: '' }],
+	templater_enabled: false,
+	templater_patterns: []
 };
 
 export class AutoNoteMoverSettingTab extends PluginSettingTab {
